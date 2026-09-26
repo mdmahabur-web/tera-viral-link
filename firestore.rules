@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdminEmail() {
+      return isSignedIn() && request.auth.token.email == 'mdmahburrahman323@gmail.com';
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        isSuperAdminEmail() ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Videos collection
+    match /videos/{videoId} {
+      // Public can only read published videos. Admins can read all.
+      allow get: if resource.data.status == 'published' || isAdmin();
+      allow list: if resource.data.status == 'published' || isAdmin();
+
+      // Admin has full control
+      allow create, delete: if isAdmin();
+
+      // Allow admin full update, or allow public view increment only
+      allow update: if isAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']) &&
+        request.resource.data.views == resource.data.views + 1
+      );
+    }
+
+    // Categories collection
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Site settings & ad settings
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Admin records
+    match /admins/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      // Initial bootstrap: super admin email or self-registering if first admin
+      allow create: if isSignedIn() && request.auth.uid == uid && (
+        isSuperAdminEmail() ||
+        request.resource.data.role == 'admin'
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    // API credentials: only authenticated admins can read or write
+    match /api_credentials/{credentialId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

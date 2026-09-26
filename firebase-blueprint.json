@@ -1,0 +1,120 @@
+{
+  "entities": {
+    "video": {
+      "title": "Video",
+      "description": "A video discovery item with external player website URL",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 200 },
+        "slug": { "type": "string", "maxLength": 250, "pattern": "^[a-z0-9\\-]+$" },
+        "thumbnailUrl": { "type": "string", "maxLength": 1000 },
+        "playerWebsiteUrl": { "type": "string", "maxLength": 2000 },
+        "player_url": { "type": "string", "maxLength": 2000 },
+        "link": { "type": "string", "maxLength": 2000 },
+        "url": { "type": "string", "maxLength": 2000 },
+        "source_url": { "type": "string", "maxLength": 2000 },
+        "sourceUrl": { "type": "string", "maxLength": 2000 },
+        "category": { "type": "string", "maxLength": 100 },
+        "quality": { "type": "string", "maxLength": 20 },
+        "duration": { "type": "string", "maxLength": 20 },
+        "fileSize": { "type": "string", "maxLength": 30 },
+        "views": { "type": "number" },
+        "status": { "type": "string", "enum": ["published", "draft", "hidden"] },
+        "featured": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "slug", "thumbnailUrl", "playerWebsiteUrl", "category", "quality", "duration", "fileSize", "views", "status", "featured"]
+    },
+    "category": {
+      "title": "Category",
+      "description": "Video category definition",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "slug": { "type": "string", "maxLength": 100, "pattern": "^[a-z0-9\\-]+$" },
+        "videoCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "slug"]
+    },
+    "adSettings": {
+      "title": "AdSettings",
+      "description": "Details page banner advertisement configuration",
+      "type": "object",
+      "properties": {
+        "topBannerEnabled": { "type": "boolean" },
+        "topBannerHtml": { "type": "string", "maxLength": 5000 },
+        "bottomBannerEnabled": { "type": "boolean" },
+        "bottomBannerHtml": { "type": "string", "maxLength": 5000 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["topBannerEnabled", "bottomBannerEnabled"]
+    },
+    "siteSettings": {
+      "title": "SiteSettings",
+      "description": "Global website settings and maintenance mode",
+      "type": "object",
+      "properties": {
+        "appName": { "type": "string", "maxLength": 100 },
+        "logoUrl": { "type": "string", "maxLength": 1000 },
+        "footerText": { "type": "string", "maxLength": 500 },
+        "maintenanceMode": { "type": "boolean" },
+        "maintenanceMessage": { "type": "string", "maxLength": 1000 },
+        "contactEmail": { "type": "string", "maxLength": 200 },
+        "contactNotice": { "type": "string", "maxLength": 1000 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["appName", "maintenanceMode"]
+    },
+    "admin": {
+      "title": "Admin",
+      "description": "Administrator account role marker",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "maxLength": 200 },
+        "role": { "type": "string", "enum": ["admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role"]
+    },
+    "apiCredentials": {
+      "title": "ApiCredentials",
+      "description": "Secure API keys and secrets for external services such as TeraBox Auto-Fetch",
+      "type": "object",
+      "properties": {
+        "apiKey": { "type": "string", "maxLength": 200 },
+        "apiSecret": { "type": "string", "maxLength": 200 },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "updatedBy": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["apiKey", "apiSecret"]
+    }
+  },
+  "firestore": {
+    "/videos/{videoId}": {
+      "schema": "video",
+      "description": "Collection of all video items"
+    },
+    "/categories/{categoryId}": {
+      "schema": "category",
+      "description": "Collection of video categories"
+    },
+    "/settings/ads": {
+      "schema": "adSettings",
+      "description": "Details page top and bottom ad configuration"
+    },
+    "/settings/site": {
+      "schema": "siteSettings",
+      "description": "Global application branding and maintenance configuration"
+    },
+    "/admins/{uid}": {
+      "schema": "admin",
+      "description": "Collection of verified administrator user IDs"
+    },
+    "/api_credentials/{credentialId}": {
+      "schema": "apiCredentials",
+      "description": "Admin-only credentials store for API integration"
+    }
+  }
+}

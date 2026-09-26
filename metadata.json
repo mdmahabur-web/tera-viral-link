@@ -1,0 +1,8 @@
+{
+  "name": "Tera Viral Link",
+  "description": "A modern, dark, premium mobile-first video discovery and video-link platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

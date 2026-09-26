@@ -9,6 +9,7 @@ import { BottomNavigation } from './components/BottomNavigation';
 import { Footer } from './components/Footer';
 import { WatchlistModal } from './components/WatchlistModal';
 import { MaintenanceScreen } from './components/MaintenanceScreen';
+import { AgeVerificationModal } from './components/AgeVerificationModal';
 
 // Public Pages
 import { HomePage } from './pages/HomePage';
@@ -51,7 +52,7 @@ const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   return (
     <div className="min-h-screen flex flex-col bg-[#08090d] text-slate-100 selection:bg-amber-500 selection:text-black">
       <Header onOpenWatchlist={() => setWatchlistOpen(true)} />
-      <main className="flex-1 w-full pb-16 md:pb-0">{children}</main>
+      <main className="flex-1 w-full pb-20 md:pb-6">{children}</main>
       <Footer />
       <BottomNavigation />
       <WatchlistModal
@@ -67,6 +68,7 @@ export default function App() {
     <AuthProvider>
       <SettingsProvider>
         <BrowserRouter>
+          <AgeVerificationModal />
           <Routes>
             {/* Public App Routes */}
             <Route

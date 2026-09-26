@@ -49,6 +49,7 @@ export const AdminVideos: React.FC = () => {
 
   // Form states
   const [formTitle, setFormTitle] = useState('');
+  const [formDescription, setFormDescription] = useState('');
   const [formSlug, setFormSlug] = useState('');
   const [formThumbnail, setFormThumbnail] = useState('');
   const [formPlayerUrl, setFormPlayerUrl] = useState('');
@@ -118,6 +119,7 @@ export const AdminVideos: React.FC = () => {
   const openAddModal = () => {
     setEditingVideo(null);
     setFormTitle('');
+    setFormDescription('');
     setFormSlug('');
     setFormThumbnail('');
     setFormPlayerUrl('');
@@ -141,6 +143,7 @@ export const AdminVideos: React.FC = () => {
   const openEditModal = (v: Video) => {
     setEditingVideo(v);
     setFormTitle(v.title);
+    setFormDescription(v.description || '');
     setFormSlug(v.slug);
     setFormThumbnail(v.thumbnailUrl);
     // If source_url is stored, load it. Otherwise, if playerWebsiteUrl was an original TeraBox link, use that as sourceUrl.
@@ -329,6 +332,7 @@ export const AdminVideos: React.FC = () => {
     const videoData: Video = {
       id: videoId,
       title: formTitle.trim(),
+      description: formDescription.trim(),
       slug: finalSlug,
       thumbnailUrl: formThumbnail.trim(),
       playerWebsiteUrl: formPlayerUrl.trim(),
@@ -643,338 +647,359 @@ export const AdminVideos: React.FC = () => {
         </div>
       </div>
 
-      {/* Add / Edit Video Modal (Section 18, 52) */}
+      {/* Add / Edit Video Modal (Fully responsive, mobile-scrollable, zero cutoff) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-[#11131c] border border-slate-800 rounded-3xl shadow-2xl p-6 space-y-5 my-8">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h2 className="text-lg font-bold text-white">
-                {editingVideo ? 'Edit Video Link' : 'Add New Video Link'}
-              </h2>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/90 backdrop-blur-sm p-2 sm:p-4 md:p-6 flex items-start justify-center animate-in fade-in duration-150">
+          <div className="relative w-full max-w-2xl bg-[#11131c] border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col my-2 sm:my-6 overflow-hidden max-h-[calc(100vh-1rem)] sm:max-h-[92vh]">
+            
+            {/* Pinned/Sticky Header */}
+            <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-800 bg-[#11131c] px-4 sm:px-6 py-3.5 sm:py-4 shrink-0">
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-white">
+                  {editingVideo ? 'Edit Video Link' : 'Add New Video Link'}
+                </h2>
+                <p className="text-[11px] text-slate-400 hidden sm:block">
+                  Fill in video details or auto-fetch metadata from TeraBox
+                </p>
+              </div>
               <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                title="Close modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {formError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
-                {formError}
-              </div>
-            )}
-
-            {duplicateWarning && (
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
-                <span>{duplicateWarning}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSaveVideo} className="space-y-4 text-xs">
-              {/* Auto-Fetch TeraBox Feature Section */}
-              <div className="p-4 rounded-2xl bg-gradient-to-b from-[#131724] to-[#0e111a] border border-amber-500/25 shadow-lg space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
-                      <Sparkles className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="font-bold text-white text-xs">Auto-Fetch from TeraBox</span>
-                      <p className="text-[10px] text-slate-400">
-                        Automatically extract Title, Thumbnail, Size, Resolution, and Duration
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Above TeraBox link input: Mobile-friendly "Paste" button with clipboard icon (Requirement 2) */}
-                  <button
-                    type="button"
-                    onClick={handlePasteTeraBoxLink}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 font-semibold text-xs border border-slate-700 hover:border-amber-500/40 transition-all cursor-pointer active:scale-95 shadow-sm"
-                    title="Paste TeraBox link from clipboard"
-                  >
-                    <Clipboard className="w-3.5 h-3.5" />
-                    <span>Paste</span>
-                  </button>
-                </div>
-
-                {/* TeraBox Link Input with Fetch Button beside it (Requirement 3) */}
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="url"
-                      value={teraBoxUrl}
-                      onChange={(e) => {
-                        setTeraBoxUrl(e.target.value);
-                        setFetchErrorMessage(null);
-                      }}
-                      placeholder="https://terabox.com/s/..., 1024tera.com, terasharelink.com..."
-                      className="w-full bg-[#0a0c13] border border-slate-800 rounded-xl px-3.5 py-2.5 text-white font-mono text-xs placeholder-slate-500 focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-
-                  {/* Fetch Button beside the TeraBox link field */}
-                  <button
-                    type="button"
-                    onClick={handleFetchTeraBox}
-                    disabled={fetchingTeraBox || !teraBoxUrl.trim()}
-                    className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                  >
-                    {fetchingTeraBox ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Fetching...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-4 h-4" />
-                        <span>Fetch</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400 pt-0.5">
-                  <span className="text-slate-500">Supported domains:</span>
-                  <span className="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 font-mono">terabox.com</span>
-                  <span className="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 font-mono">teraboxapp.com</span>
-                  <span className="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 font-mono">1024tera.com</span>
-                  <span className="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 font-mono">terasharelink.com</span>
-                  <span className="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 font-mono">mirrobox.com</span>
-                  <span className="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 font-mono">nephobox.com</span>
-                  <span className="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 font-mono">+ more</span>
-                </div>
-
-                {/* Loading / Success / Error States (Requirement 8) */}
-                {fetchSuccessMessage && (
-                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[11px] flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-                    <span className="flex-1 leading-tight">{fetchSuccessMessage}</span>
-                    <button
-                      type="button"
-                      onClick={() => setFetchSuccessMessage(null)}
-                      className="text-emerald-400 hover:text-white p-0.5"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+            {/* Form with scrollable body and sticky action footer */}
+            <form onSubmit={handleSaveVideo} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 text-xs">
+                {formError && (
+                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+                    {formError}
                   </div>
                 )}
 
-                {fetchErrorMessage && (
-                  <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[11px] flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
-                    <span className="flex-1 leading-tight">{fetchErrorMessage}</span>
-                    <button
-                      type="button"
-                      onClick={() => setFetchErrorMessage(null)}
-                      className="text-rose-400 hover:text-white p-0.5"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                {duplicateWarning && (
+                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>{duplicateWarning}</span>
                   </div>
                 )}
-              </div>
 
-              {/* Title */}
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  Video Title <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formTitle}
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                  placeholder="e.g. Ultra Fast Action Clip 4K"
-                  className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
-                />
-              </div>
+                {/* Auto-Fetch TeraBox Feature Section */}
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-b from-[#131724] to-[#0e111a] border border-amber-500/25 shadow-lg space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <span className="font-bold text-white text-xs">Auto-Fetch from TeraBox</span>
+                        <p className="text-[10px] text-slate-400 hidden sm:block">
+                          Automatically extract Title, Thumbnail, Size, Resolution, and Duration
+                        </p>
+                      </div>
+                    </div>
 
-              {/* Slug Preview */}
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  URL Slug (Auto-generated / Unique)
-                </label>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-mono text-[11px]">/video/</span>
-                  <input
-                    type="text"
-                    value={formSlug}
-                    onChange={(e) => setFormSlug(e.target.value)}
-                    className="flex-1 bg-[#161a28] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-[11px] focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-              </div>
-
-              {/* Thumbnail URL & Live Preview (Section 6: ImgBB URLs) */}
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">
-                  Thumbnail Image URL (ImgBB recommended) <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  type="url"
-                  required
-                  value={formThumbnail}
-                  onChange={(e) => {
-                    setFormThumbnail(e.target.value);
-                    setThumbnailPreviewError(false);
-                  }}
-                  placeholder="https://i.ibb.co/... or image link"
-                  className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
-                />
-
-                {/* NEW Live Thumbnail Preview Box (Requirement 5 & 6) */}
-                <LiveThumbnailPreview url={formThumbnail} />
-              </div>
-
-              {/* Player Website URL (Section 11, 20) */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-slate-300 font-semibold">
-                    Video Link / Player URL <span className="text-rose-400">*</span>
-                  </label>
-                  <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 font-medium">
-                    player_url
-                  </span>
-                </div>
-                <input
-                  type="url"
-                  required
-                  value={formPlayerUrl}
-                  onChange={(e) => handlePlayerUrlChange(e.target.value)}
-                  placeholder="https://teraboxapp.com/s/... or video link"
-                  className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono text-xs"
-                />
-                <span className="text-[10px] text-slate-500 mt-1 block">
-                  Original video URL automatically populated upon fetching.
-                </span>
-              </div>
-
-              {/* Source URL (Requirement 3: Saved separately so original link is not lost) */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-slate-300 font-semibold text-xs flex items-center gap-1.5">
-                    <span>Source URL (Original TeraBox Link)</span>
-                    <span className="text-[10px] text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
-                      source_url
-                    </span>
-                  </label>
-                  {formSourceUrl && (
+                    {/* Mobile-friendly Paste button */}
                     <button
                       type="button"
-                      onClick={() => navigator.clipboard.writeText(formSourceUrl)}
-                      className="text-[10px] text-slate-400 hover:text-amber-400 flex items-center gap-1 cursor-pointer"
-                      title="Copy Source URL"
+                      onClick={handlePasteTeraBoxLink}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 font-semibold text-xs border border-slate-700 hover:border-amber-500/40 transition-all cursor-pointer active:scale-95 shadow-sm shrink-0"
+                      title="Paste TeraBox link from clipboard"
                     >
-                      <Clipboard className="w-3 h-3" />
-                      <span>Copy Source</span>
+                      <Clipboard className="w-3.5 h-3.5" />
+                      <span>Paste</span>
                     </button>
+                  </div>
+
+                  {/* TeraBox Link Input with Fetch Button */}
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="url"
+                        value={teraBoxUrl}
+                        onChange={(e) => {
+                          setTeraBoxUrl(e.target.value);
+                          setFetchErrorMessage(null);
+                        }}
+                        placeholder="Paste TeraBox link here..."
+                        className="w-full bg-[#0a0c13] border border-slate-800 rounded-xl px-3.5 py-2.5 text-white font-mono text-xs placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleFetchTeraBox}
+                      disabled={fetchingTeraBox || !teraBoxUrl.trim()}
+                      className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                    >
+                      {fetchingTeraBox ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Fetching...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4" />
+                          <span>Fetch</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400 pt-0.5">
+                    <span className="text-slate-500">Supported:</span>
+                    <span className="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 font-mono">terabox.com</span>
+                    <span className="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 font-mono">1024tera.com</span>
+                    <span className="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 font-mono">terasharelink.com</span>
+                    <span className="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 font-mono">+ more</span>
+                  </div>
+
+                  {fetchSuccessMessage && (
+                    <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[11px] flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                      <span className="flex-1 leading-tight">{fetchSuccessMessage}</span>
+                      <button
+                        type="button"
+                        onClick={() => setFetchSuccessMessage(null)}
+                        className="text-emerald-400 hover:text-white p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {fetchErrorMessage && (
+                    <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[11px] flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+                      <span className="flex-1 leading-tight">{fetchErrorMessage}</span>
+                      <button
+                        type="button"
+                        onClick={() => setFetchErrorMessage(null)}
+                        className="text-rose-400 hover:text-white p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   )}
                 </div>
-                <input
-                  type="url"
-                  value={formSourceUrl}
-                  onChange={(e) => setFormSourceUrl(e.target.value)}
-                  placeholder="https://terabox.com/s/... or 1024tera.com/s/..."
-                  className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono text-xs"
-                />
-                <span className="text-[10px] text-slate-500 mt-1 block">
-                  Original TeraBox link preserved safely. Accessible and exportable in bulk via the "Source URL" admin menu.
-                </span>
-              </div>
 
-              {/* Grid of properties: Category, Quality, Duration, File Size */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Category</label>
-                  <select
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-2.5 py-2 text-white focus:outline-none focus:border-amber-500"
-                  >
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Quality</label>
-                  <select
-                    value={formQuality}
-                    onChange={(e) => setFormQuality(e.target.value as VideoQuality)}
-                    className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-2.5 py-2 text-white focus:outline-none focus:border-amber-500 font-mono"
-                  >
-                    <option value="720P">720P</option>
-                    <option value="1080P">1080P</option>
-                    <option value="2K">2K</option>
-                    <option value="4K">4K</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Duration</label>
-                  <input
-                    type="text"
-                    value={formDuration}
-                    onChange={(e) => setFormDuration(e.target.value)}
-                    placeholder="12:45"
-                    className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-2.5 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">File Size</label>
-                  <input
-                    type="text"
-                    value={formFileSize}
-                    onChange={(e) => setFormFileSize(e.target.value)}
-                    placeholder="450 MB"
-                    className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-2.5 py-2 text-white focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-              </div>
-
-              {/* Status & Featured */}
-              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-800">
+                {/* Title */}
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1">
-                    Publishing Status
+                    Video Title <span className="text-rose-400">*</span>
                   </label>
-                  <select
-                    value={formStatus}
-                    onChange={(e) => setFormStatus(e.target.value as VideoStatus)}
-                    className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
-                  >
-                    <option value="published">Published (Visible to public)</option>
-                    <option value="draft">Draft (Admin only)</option>
-                    <option value="hidden">Hidden (De-listed)</option>
-                  </select>
+                  <input
+                    type="text"
+                    required
+                    value={formTitle}
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    placeholder="e.g. Viral Action Highlight 1080P"
+                    className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 text-xs sm:text-sm"
+                  />
                 </div>
 
-                <div className="flex items-center gap-3 pt-6">
-                  <label className="flex items-center gap-2 cursor-pointer text-slate-300 font-semibold select-none">
-                    <input
-                      type="checkbox"
-                      checked={formFeatured}
-                      onChange={(e) => setFormFeatured(e.target.checked)}
-                      className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 bg-slate-900 border-slate-700"
-                    />
-                    <span>Mark as Featured / Pinned</span>
+                {/* Description */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Description <span className="text-slate-500 font-normal">(Optional)</span>
                   </label>
+                  <textarea
+                    rows={2}
+                    value={formDescription}
+                    onChange={(e) => setFormDescription(e.target.value)}
+                    placeholder="Brief description or tags for this video..."
+                    className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 text-xs resize-none"
+                  />
+                </div>
+
+                {/* Slug Preview */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    URL Slug (Auto-generated / Unique)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-mono text-[11px]">/video/</span>
+                    <input
+                      type="text"
+                      value={formSlug}
+                      onChange={(e) => setFormSlug(e.target.value)}
+                      className="flex-1 bg-[#161a28] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono text-[11px] focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Thumbnail URL & Live Preview */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Thumbnail Image URL (ImgBB recommended) <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    value={formThumbnail}
+                    onChange={(e) => {
+                      setFormThumbnail(e.target.value);
+                      setThumbnailPreviewError(false);
+                    }}
+                    placeholder="https://i.ibb.co/... or image link"
+                    className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 text-xs"
+                  />
+
+                  {/* Live Thumbnail Preview Box */}
+                  <LiveThumbnailPreview url={formThumbnail} />
+                </div>
+
+                {/* Video Link / Player URL */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-300 font-semibold">
+                      Video Link / Player URL <span className="text-rose-400">*</span>
+                    </label>
+                    <span className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 font-medium">
+                      player_url
+                    </span>
+                  </div>
+                  <input
+                    type="url"
+                    required
+                    value={formPlayerUrl}
+                    onChange={(e) => handlePlayerUrlChange(e.target.value)}
+                    placeholder="https://teraboxapp.com/s/... or video link"
+                    className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono text-xs"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    Original video URL automatically populated upon fetching.
+                  </span>
+                </div>
+
+                {/* Source URL (Original TeraBox Link) */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-300 font-semibold text-xs flex items-center gap-1.5">
+                      <span>Source URL (Original TeraBox Link)</span>
+                      <span className="text-[10px] text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
+                        source_url
+                      </span>
+                    </label>
+                    {formSourceUrl && (
+                      <button
+                        type="button"
+                        onClick={() => navigator.clipboard.writeText(formSourceUrl)}
+                        className="text-[10px] text-slate-400 hover:text-amber-400 flex items-center gap-1 cursor-pointer"
+                        title="Copy Source URL"
+                      >
+                        <Clipboard className="w-3 h-3" />
+                        <span>Copy Source</span>
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="url"
+                    value={formSourceUrl}
+                    onChange={(e) => setFormSourceUrl(e.target.value)}
+                    placeholder="https://terabox.com/s/... or 1024tera.com/s/..."
+                    className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono text-xs"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    Original TeraBox link preserved safely.
+                  </span>
+                </div>
+
+                {/* Grid of properties: Category, Quality, Duration, File Size */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Category</label>
+                    <select
+                      value={formCategory}
+                      onChange={(e) => setFormCategory(e.target.value)}
+                      className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-2.5 py-2 text-white focus:outline-none focus:border-amber-500"
+                    >
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.name}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Quality</label>
+                    <select
+                      value={formQuality}
+                      onChange={(e) => setFormQuality(e.target.value as VideoQuality)}
+                      className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-2.5 py-2 text-white focus:outline-none focus:border-amber-500 font-mono"
+                    >
+                      <option value="720P">720P</option>
+                      <option value="1080P">1080P</option>
+                      <option value="2K">2K</option>
+                      <option value="4K">4K</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">Duration</label>
+                    <input
+                      type="text"
+                      value={formDuration}
+                      onChange={(e) => setFormDuration(e.target.value)}
+                      placeholder="12:45"
+                      className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-2.5 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">File Size</label>
+                    <input
+                      type="text"
+                      value={formFileSize}
+                      onChange={(e) => setFormFileSize(e.target.value)}
+                      placeholder="450 MB"
+                      className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-2.5 py-2 text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Status & Featured */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
+                  <div>
+                    <label className="block text-slate-300 font-semibold mb-1">
+                      Publishing Status
+                    </label>
+                    <select
+                      value={formStatus}
+                      onChange={(e) => setFormStatus(e.target.value as VideoStatus)}
+                      className="w-full bg-[#161a28] border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                    >
+                      <option value="published">Published (Visible to public)</option>
+                      <option value="draft">Draft (Admin only)</option>
+                      <option value="hidden">Hidden (De-listed)</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-3 sm:pt-6">
+                    <label className="flex items-center gap-2 cursor-pointer text-slate-300 font-semibold select-none">
+                      <input
+                        type="checkbox"
+                        checked={formFeatured}
+                        onChange={(e) => setFormFeatured(e.target.checked)}
+                        className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 bg-slate-900 border-slate-700"
+                      />
+                      <span>Mark as Featured / Pinned</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
-              {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+              {/* Pinned/Sticky Action Buttons Footer */}
+              <div className="sticky bottom-0 z-20 flex items-center justify-end gap-3 px-4 sm:px-6 py-3.5 sm:py-4 border-t border-slate-800 bg-[#11131c] shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors"
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

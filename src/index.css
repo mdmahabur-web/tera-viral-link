@@ -34,3 +34,15 @@
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 1rem);
 }
+
+/* GPU containment, hardware acceleration & isolation to prevent rendering artifacts & scrolling lag */
+.gpu-card-contained {
+  contain: content;
+  isolation: isolate;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+

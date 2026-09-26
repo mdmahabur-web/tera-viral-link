@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Video } from '../types';
 import { VideoCard } from './VideoCard';
 import { Film, RefreshCw } from 'lucide-react';
@@ -12,7 +12,7 @@ interface VideoGridProps {
   emptySubtitle?: string;
 }
 
-export const VideoGrid: React.FC<VideoGridProps> = ({
+const VideoGridComponent: React.FC<VideoGridProps> = ({
   videos,
   loading = false,
   hasMore = false,
@@ -26,15 +26,15 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
         {[...Array(8)].map((_, i) => (
           <div
             key={i}
-            className="flex flex-col bg-[#11131a] rounded-2xl overflow-hidden border border-slate-800/60 animate-pulse"
+            className="flex flex-col bg-[#0f111a] rounded-2xl overflow-hidden border border-slate-800/60 animate-pulse"
           >
-            <div className="aspect-video w-full bg-[#171a25]" />
+            <div className="aspect-video w-full bg-[#141724]" />
             <div className="p-3.5 space-y-3">
-              <div className="h-4 bg-[#1e2333] rounded w-5/6" />
-              <div className="h-3 bg-[#1e2333] rounded w-3/5" />
+              <div className="h-4 bg-[#1a1f30] rounded w-5/6" />
+              <div className="h-3 bg-[#1a1f30] rounded w-3/5" />
               <div className="pt-2 border-t border-slate-800/40 flex justify-between">
-                <div className="h-3 bg-[#1e2333] rounded w-16" />
-                <div className="h-3 bg-[#1e2333] rounded w-12" />
+                <div className="h-3 bg-[#1a1f30] rounded w-16" />
+                <div className="h-3 bg-[#1a1f30] rounded w-12" />
               </div>
             </div>
           </div>
@@ -57,7 +57,8 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+      {/* Optimized Grid with containment */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 [contain:layout_style]">
         {videos.map((video) => (
           <VideoCard key={video.id} video={video} />
         ))}
@@ -66,9 +67,10 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
       {hasMore && onLoadMore && (
         <div className="flex justify-center pt-4 pb-2">
           <button
+            type="button"
             onClick={onLoadMore}
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#141824] hover:bg-[#1a2030] text-slate-200 hover:text-amber-400 font-semibold text-xs sm:text-sm border border-slate-800 hover:border-slate-700 transition-all shadow-md active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#141824] hover:bg-[#1a2030] text-slate-200 hover:text-amber-400 font-semibold text-xs sm:text-sm border border-slate-800 hover:border-slate-700 transition-colors shadow-md active:scale-95 disabled:opacity-50 cursor-pointer pointer-events-auto touch-manipulation"
           >
             {loading ? (
               <>
@@ -84,3 +86,5 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
     </div>
   );
 };
+
+export const VideoGrid = memo(VideoGridComponent);

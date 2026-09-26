@@ -6,6 +6,7 @@ export interface Video {
   title: string;
   slug: string;
   thumbnailUrl: string;
+  description?: string;
   playerWebsiteUrl: string;
   player_url?: string;
   link?: string;

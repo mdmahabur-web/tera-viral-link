@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Category } from '../types';
 
 interface CategoryBarProps {
@@ -7,7 +7,7 @@ interface CategoryBarProps {
   onSelectCategory: (category: string) => void;
 }
 
-export const CategoryBar: React.FC<CategoryBarProps> = ({
+const CategoryBarComponent: React.FC<CategoryBarProps> = ({
   categories,
   selectedCategory,
   onSelectCategory,
@@ -15,10 +15,11 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
   return (
     <div className="w-full overflow-x-auto no-scrollbar py-2 px-1 flex items-center gap-2">
       <button
+        type="button"
         onClick={() => onSelectCategory('all')}
-        className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border ${
+        className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border cursor-pointer ${
           selectedCategory === 'all'
-            ? 'bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/20'
+            ? 'bg-amber-500 text-black border-amber-400 shadow-sm'
             : 'bg-[#121520] hover:bg-[#181d2c] text-slate-300 border-slate-800 hover:border-slate-700'
         }`}
       >
@@ -30,10 +31,11 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
         return (
           <button
             key={cat.id}
+            type="button"
             onClick={() => onSelectCategory(cat.name)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border cursor-pointer ${
               isSelected
-                ? 'bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/20'
+                ? 'bg-amber-500 text-black border-amber-400 shadow-sm'
                 : 'bg-[#121520] hover:bg-[#181d2c] text-slate-300 border-slate-800 hover:border-slate-700'
             }`}
           >
@@ -44,3 +46,6 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
     </div>
   );
 };
+
+export const CategoryBar = memo(CategoryBarComponent);
+
